@@ -747,7 +747,7 @@
             { num: "08", phase: "Arquitectura", phaseClass: "arch", icon: "fa-network-wired", title: "Controlador REST", desc: "Exponé tu lógica al mundo HTTP. Cada método maneja un verbo distinto: GET para leer, POST para crear, PUT para reemplazar, PATCH para actualizar parcialmente, DELETE para eliminar. Postman es tu herramienta de prueba.", tags: ["GET", "POST", "PUT", "PATCH", "DELETE", "Postman"], archTargets: ['node-ctrl', 'node-http', 'arr-1'] },
             { num: "09", phase: "Arquitectura", phaseClass: "arch", icon: "fa-tags", title: "Anotaciones REST", desc: "@RestController convierte tu clase en un endpoint HTTP. @RequestMapping define la ruta base. @PathVariable captura el {id} de la URL. @RequestBody deserializa el JSON del body en un objeto Java automáticamente.", tags: ["@RestController", "@RequestMapping", "@PathVariable", "@RequestBody"], archTargets: ['node-ctrl', 'node-http', 'arr-1'] },
             { num: "10", phase: "Robustez", phaseClass: "robust", icon: "fa-shield-halved", title: "Validaciones", desc: "Nunca confíes en los datos que llegan a tu API. Con @Valid activás el validador en el Controller, y anotás cada campo del DTO con reglas: @NotBlank para strings, @NotNull para objetos, @Min/@Max para rangos numéricos.", tags: ["@Valid", "@NotBlank", "@NotNull", "@Min", "@Max"], archTargets: ['node-otros', 'node-dto'] },
-            { num: "11", phase: "Robustez", phaseClass: "robust", icon: "fa-triangle-exclamation", title: "Manejo de Errores", desc: "Centralizá todos los errores en un solo lugar con @ControllerAdvice. Definís qué hacer ante cada tipo de excepción con @ExceptionHandler y devolvés respuestas HTTP estructuradas con el código correcto (404, 400, 500).", tags: ["@ControllerAdvice", "@ExceptionHandler", "Códigos HTTP"], archTargets: ['node-otros'] },
+            { num: "11", phase: "Robustez", phaseClass: "robust", icon: "fa-triangle-exclamation", title: "Manejo de Errores", desc: "Centralizá todos los errores en un solo lugar con @ControllerAdvice. Definís qué hacer ante cada tipo de excepción con @ExceptionHandler y devolvés respuestas HTTP estructuradas con el código correcto (404, 400, 500).", tags: ["@ControllerAdvice", "@ExceptionHandler", "ResourceNotFoundException", "Códigos HTTP"], archTargets: ['node-otros'] },
             { num: "12", phase: "Avanzado", phaseClass: "advanced", icon: "fa-link", title: "Relaciones entre Entidades", desc: "Modelá cómo se relacionan tus tablas directamente en Java. @OneToMany / @ManyToOne crean las Foreign Keys, @JoinColumn personaliza el nombre de la columna, y FetchType.LAZY evita cargar datos innecesarios.", tags: ["@OneToMany", "@ManyToOne", "@JoinColumn", "FetchType", "mappedBy", "cascade", "orphanRemoval"], archTargets: ['node-ent', 'node-model', 'node-db'] },
             { num: "13", phase: "Avanzado", phaseClass: "advanced", icon: "fa-box-archive", title: "DTOs", desc: "Nunca expongas tu Entidad directamente a la API. El patrón DTO usa clases separadas para el input (Request DTO) y el output (Response DTO), ocultando campos sensibles y aislando tu modelo interno de los cambios del contrato público.", tags: ["DTO Pattern", "Request DTO", "Response DTO", "ModelMapper"], archTargets: ['node-dto', 'node-ent', 'arr-down-1', 'arr-down-2'] },
             { num: "14", phase: "Avanzado", phaseClass: "advanced", icon: "fa-gear", title: "Configuración Personalizada", desc: "Cuando necesitás integrar librerías externas como ModelMapper o Swagger, usás @Configuration para declarar una clase de configuración y @Bean para registrar instancias en el contexto de Spring manualmente.", tags: ["@Configuration", "@Bean", "Spring Context"], archTargets: ['node-otros'] },
@@ -1065,6 +1065,12 @@
                 { title: "Handlers del patrón UTN", desc: "Exception.class → 500 Internal Server Error con ErrorApi. MethodArgumentNotValidException.class → 400 Bad Request con ValidationErrorResponse (lista de errores campo + código). UnexpectedTypeException.class → 400 con código INVALID_CONSTRAINT_TYPE. ResponseStatusException.class → usa el status del propio exception." },
                 { title: "resolveErrorCode — códigos semánticos", desc: "En vez de devolver el mensaje de validación en texto libre, el patrón UTN mapea cada código de constraint a una constante string: NotBlank → NOT_BLANK, Size → SIZE_TOO_SHORT / SIZE_TOO_LONG, Email → INVALID_EMAIL, Positive → POSITIVE, NotNull → NOT_NULL. El frontend puede internacionalizarlos." },
                 { title: "Docs oficiales", desc: "<a href='https://www.baeldung.com/spring-exceptionhandler' target='_blank'><i class='fa-solid fa-book'></i> Baeldung: @ExceptionHandler</a>" }
+            ],
+            "ResourceNotFoundException": [
+                { title: "¿Qué es?", desc: "Excepción propia del dominio para representar que un recurso solicitado no existe. Se usa cuando el cliente pide un `Auto`, `TipoAuto` u otra entidad por id y no hay registro en la base de datos." },
+                { title: "Dónde se lanza", desc: "Normalmente se lanza en el Service, no en el Controller: `repo.findById(id).orElseThrow(() -> new ResourceNotFoundException('Auto no encontrado: ' + id));`. El Controller queda limpio y el manejo del error queda centralizado." },
+                { title: "Cómo se responde", desc: "El `@ControllerAdvice` la captura con `@ExceptionHandler(ResourceNotFoundException.class)` y devuelve HTTP 404 Not Found con un `ErrorApi` estructurado para el cliente." },
+                { title: "Ejemplo de clase", desc: "`public class ResourceNotFoundException extends RuntimeException { public ResourceNotFoundException(String message) { super(message); } }`" }
             ],
             "Códigos HTTP": [
                 { title: "¿Qué son?", desc: "Números de 3 dígitos que el servidor incluye en cada respuesta HTTP para indicar el resultado de la operación. Son el lenguaje estándar entre cliente y servidor para comunicar éxito, errores del cliente o errores del servidor." },
@@ -1992,6 +1998,7 @@ spring.jpa.open-in-view=<span class="kw">false</span></pre></div>
                                 <h4><i class="fa-solid fa-sitemap"></i> Handlers en el patrón UTN</h4>
                                 <ul>
                                     <li><b style="color:#ef4444">Exception.class</b> → 500 + ErrorApi genérico</li>
+                                    <li><b style="color:#22c55e">ResourceNotFoundException</b> → 404 + ErrorApi</li>
                                     <li><b style="color:#f59e0b">MethodArgumentNotValidException</b> → 400 + ValidationErrorResponse</li>
                                     <li><b style="color:#3b82f6">UnexpectedTypeException</b> → 400 + INVALID_CONSTRAINT_TYPE</li>
                                     <li><b style="color:#8b5cf6">ResponseStatusException</b> → usa el status del exception</li>
@@ -2032,6 +2039,14 @@ spring.jpa.open-in-view=<span class="kw">false</span></pre></div>
     <span class="kw">public</span> <span class="cl">ResponseEntity</span>&lt;<span class="cl">ErrorApi</span>&gt; <span class="mt">handleError</span>(<span class="cl">Exception</span> exception) {
         <span class="cl">ErrorApi</span> error = <span class="mt">buildError</span>(exception.<span class="mt">getMessage</span>(), <span class="cl">HttpStatus</span>.INTERNAL_SERVER_ERROR);
         <span class="kw">return</span> <span class="cl">ResponseEntity</span>.<span class="mt">status</span>(<span class="cl">HttpStatus</span>.INTERNAL_SERVER_ERROR).<span class="mt">body</span>(error);
+    }
+
+    <span class="cm">// Recurso inexistente → 404 Not Found</span>
+    <span class="an">@ExceptionHandler</span>(<span class="cl">ResourceNotFoundException</span>.<span class="kw">class</span>)
+    <span class="kw">public</span> <span class="cl">ResponseEntity</span>&lt;<span class="cl">ErrorApi</span>&gt; <span class="mt">handleResourceNotFound</span>(
+            <span class="cl">ResourceNotFoundException</span> exception) {
+        <span class="cl">ErrorApi</span> error = <span class="mt">buildError</span>(exception.<span class="mt">getMessage</span>(), <span class="cl">HttpStatus</span>.NOT_FOUND);
+        <span class="kw">return</span> <span class="cl">ResponseEntity</span>.<span class="mt">status</span>(<span class="cl">HttpStatus</span>.NOT_FOUND).<span class="mt">body</span>(error);
     }
 
     <span class="cm">// ── @Valid falla → 400 con lista de errores por campo ────</span>
