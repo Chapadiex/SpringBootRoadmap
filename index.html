@@ -748,7 +748,7 @@
             { num: "09", phase: "Arquitectura", phaseClass: "arch", icon: "fa-tags", title: "Anotaciones REST", desc: "@RestController convierte tu clase en un endpoint HTTP. @RequestMapping define la ruta base. @PathVariable captura el {id} de la URL. @RequestBody deserializa el JSON del body en un objeto Java automáticamente.", tags: ["@RestController", "@RequestMapping", "@PathVariable", "@RequestBody"], archTargets: ['node-ctrl', 'node-http', 'arr-1'] },
             { num: "10", phase: "Robustez", phaseClass: "robust", icon: "fa-shield-halved", title: "Validaciones", desc: "Nunca confíes en los datos que llegan a tu API. Con @Valid activás el validador en el Controller, y anotás cada campo del DTO con reglas: @NotBlank para strings, @NotNull para objetos, @Min/@Max para rangos numéricos.", tags: ["@Valid", "@NotBlank", "@NotNull", "@Min", "@Max"], archTargets: ['node-otros'] },
             { num: "11", phase: "Robustez", phaseClass: "robust", icon: "fa-triangle-exclamation", title: "Manejo de Errores", desc: "Centralizá todos los errores en un solo lugar con @ControllerAdvice. Definís qué hacer ante cada tipo de excepción con @ExceptionHandler y devolvés respuestas HTTP estructuradas con el código correcto (404, 400, 500).", tags: ["@ControllerAdvice", "@ExceptionHandler", "Códigos HTTP"], archTargets: ['node-otros'] },
-            { num: "12", phase: "Avanzado", phaseClass: "advanced", icon: "fa-link", title: "Relaciones entre Entidades", desc: "Modelá cómo se relacionan tus tablas directamente en Java. @OneToMany / @ManyToOne crean las Foreign Keys, @JoinColumn personaliza el nombre de la columna, y FetchType.LAZY evita cargar datos innecesarios.", tags: ["@OneToMany", "@ManyToOne", "@JoinColumn", "FetchType", "mappedBy / cascade / orphanRemoval"], archTargets: ['node-ent', 'node-model', 'node-db'] },
+            { num: "12", phase: "Avanzado", phaseClass: "advanced", icon: "fa-link", title: "Relaciones entre Entidades", desc: "Modelá cómo se relacionan tus tablas directamente en Java. @OneToMany / @ManyToOne crean las Foreign Keys, @JoinColumn personaliza el nombre de la columna, y FetchType.LAZY evita cargar datos innecesarios.", tags: ["@OneToMany", "@ManyToOne", "@JoinColumn", "FetchType", "mappedBy", "cascade", "orphanRemoval"], archTargets: ['node-ent', 'node-model', 'node-db'] },
             { num: "13", phase: "Avanzado", phaseClass: "advanced", icon: "fa-box-archive", title: "DTOs", desc: "Nunca expongas tu Entidad directamente a la API. El patrón DTO usa clases separadas para el input (Request DTO) y el output (Response DTO), ocultando campos sensibles y aislando tu modelo interno de los cambios del contrato público.", tags: ["DTO Pattern", "Request DTO", "Response DTO", "ModelMapper"], archTargets: ['node-dto', 'node-ent', 'arr-down-1', 'arr-down-2'] },
             { num: "14", phase: "Avanzado", phaseClass: "advanced", icon: "fa-gear", title: "Configuración Personalizada", desc: "Cuando necesitás integrar librerías externas como ModelMapper o Swagger, usás @Configuration para declarar una clase de configuración y @Bean para registrar instancias en el contexto de Spring manualmente.", tags: ["@Configuration", "@Bean", "Spring Context"], archTargets: ['node-otros'] },
             { num: "15", phase: "Avanzado", phaseClass: "advanced", icon: "fa-syringe", title: "Inyección de Dependencias", desc: "Spring ensambla tus clases automáticamente (IoC). Constructor Injection es la forma recomendada: hace los atributos final, facilita el testing y hace visible qué dependencias necesita cada clase. @Autowired es opcional si hay un solo constructor.", tags: ["Constructor Injection", "Field Injection", "@Autowired"], archTargets: ['node-ctrl', 'node-srv', 'node-repo', 'arr-2', 'arr-3', 'arr-4'] },
@@ -1200,6 +1200,21 @@
             ],
 
             // ── MÓDULO 12 extras ──────────────────────────────────────────
+            "mappedBy": [
+                { title: "mappedBy — quién tiene la FK", desc: "En una relación bidireccional, `mappedBy` le dice a JPA que el lado que ya declara la Foreign Key es el `@ManyToOne`. Ejemplo: `@OneToMany(mappedBy='tipoAuto')` en `TipoAuto` significa que la columna `tipo_auto_id` ya está declarada en la clase `Auto`." },
+                { title: "Qué evita", desc: "Sin `mappedBy`, JPA puede crear una tabla intermedia innecesaria para unir las dos entidades. Con `mappedBy`, la FK vive donde corresponde: en la tabla del lado muchos." },
+                { title: "Regla práctica", desc: "Usalo en el lado inverso de una relación bidireccional. El valor de `mappedBy` debe coincidir exactamente con el nombre del atributo del otro lado." }
+            ],
+            "cascade": [
+                { title: "cascade — propagar operaciones", desc: "`cascade` permite que una operación hecha sobre el padre se propague automáticamente a los hijos. Por ejemplo, al guardar un `TipoAuto`, también se pueden guardar sus `Auto` asociados." },
+                { title: "Tipos comunes", desc: "`PERSIST` guarda hijos nuevos, `MERGE` actualiza hijos, `REMOVE` borra hijos al borrar el padre y `ALL` aplica todo. `REMOVE` y `ALL` requieren cuidado porque pueden borrar datos relacionados." },
+                { title: "Ejemplo", desc: "`@OneToMany(mappedBy='tipoAuto', cascade=CascadeType.PERSIST)` permite guardar autos nuevos cuando guardás el tipo. Si no querés borrados automáticos, evitá `CascadeType.REMOVE` o `ALL`." }
+            ],
+            "orphanRemoval": [
+                { title: "orphanRemoval — eliminar huérfanos", desc: "`orphanRemoval=true` elimina de la base de datos una entidad hija cuando deja de pertenecer a la colección del padre." },
+                { title: "Ejemplo", desc: "Si ejecutás `tipoAuto.getAutos().remove(auto)`, Hibernate hace el `DELETE` de ese auto en el próximo flush. No hace falta llamar explícitamente a `repository.delete(auto)`." },
+                { title: "Diferencia con cascade", desc: "`CascadeType.REMOVE` borra los hijos cuando se elimina el padre. `orphanRemoval=true` borra hijos cuando se los desvincula de la colección, aunque el padre siga existiendo." }
+            ],
             "mappedBy / cascade / orphanRemoval": [
                 { title: "mappedBy — quién tiene la FK", desc: "En una relación bidireccional, mappedBy le dice a JPA que el lado que ya declara la FK es el @ManyToOne. Ejemplo: @OneToMany(mappedBy='tipoAuto') en TipoAuto significa que la columna tipo_auto_id ya está declarada en la clase Auto. Sin mappedBy, JPA crea una tabla intermedia innecesaria tipo auto_tipo_auto." },
                 { title: "CascadeType — propagar operaciones", desc: "Cascade permite que una operación sobre el padre se propague automáticamente a los hijos. Tipos: ALL (propaga todo), PERSIST (al guardar el padre, guarda los hijos nuevos), MERGE (al actualizar el padre, actualiza los hijos), REMOVE (al borrar el padre, borra los hijos — ¡peligroso!), DETACH, REFRESH. Uso: @OneToMany(mappedBy='tipoAuto', cascade=CascadeType.PERSIST)." },
@@ -1736,14 +1751,21 @@
                     <div class="nd-grid">
                         <div class="nd-code">
                             <div class="nd-code-label"><i class="fa-solid fa-sliders"></i> application.properties</div>
-                            <pre><span class="cm"># Activa la consola web H2</span>
+                            <pre>spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+<span class="cm"># Activa la consola web H2</span>
 spring.h2.console.enabled=<span class="kw">true</span>
 spring.h2.console.path=/h2-console
 
 <span class="cm"># Ver el SQL que genera Hibernate</span>
 spring.jpa.show-sql=<span class="kw">true</span>
-spring.jpa.properties.hibernate
-  .format_sql=<span class="kw">true</span></pre></div>
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.defer-datasource-initialization=<span class="kw">true</span>
+spring.sql.init.mode=always
+spring.jpa.open-in-view=<span class="kw">false</span></pre></div>
                         <div class="nd-card"><h4><i class="fa-solid fa-globe"></i> Acceso en el navegador</h4><p>Con la app corriendo, ingresá a:<br><br><b style="color:#3b82f6">http://localhost:8080/h2-console</b><br><br>JDBC URL: <b>jdbc:h2:mem:testdb</b><br>User: <b>sa</b> · Password: (vacío)<br><br>Desde ahí podés ejecutar SELECT, INSERT y ver las tablas generadas.</p></div>
                     </div>`
             },
