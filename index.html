@@ -1067,10 +1067,10 @@
                 { title: "Docs oficiales", desc: "<a href='https://www.baeldung.com/spring-exceptionhandler' target='_blank'><i class='fa-solid fa-book'></i> Baeldung: @ExceptionHandler</a>" }
             ],
             "ResourceNotFoundException": [
-                { title: "¿Qué es?", desc: "Excepción propia del dominio para representar que un recurso solicitado no existe. Se usa cuando el cliente pide un `Auto`, `TipoAuto` u otra entidad por id y no hay registro en la base de datos." },
+                { title: "¿Qué es?", desc: "Clase de excepción propia del proyecto. Hay que crearla antes de usarla, igual que cualquier otra clase Java. Representa que un recurso solicitado no existe en la base de datos." },
+                { title: "Creación de la clase", desc: "`public class ResourceNotFoundException extends RuntimeException { public ResourceNotFoundException(String message) { super(message); } }`. Puede vivir en un paquete como `exceptions` o `exceptions.common` según la estructura del proyecto." },
                 { title: "Dónde se lanza", desc: "Normalmente se lanza en el Service, no en el Controller: `repo.findById(id).orElseThrow(() -> new ResourceNotFoundException('Auto no encontrado: ' + id));`. El Controller queda limpio y el manejo del error queda centralizado." },
-                { title: "Cómo se responde", desc: "El `@ControllerAdvice` la captura con `@ExceptionHandler(ResourceNotFoundException.class)` y devuelve HTTP 404 Not Found con un `ErrorApi` estructurado para el cliente." },
-                { title: "Ejemplo de clase", desc: "`public class ResourceNotFoundException extends RuntimeException { public ResourceNotFoundException(String message) { super(message); } }`" }
+                { title: "Cómo se responde", desc: "Después de crearla, el `@ControllerAdvice` la captura con `@ExceptionHandler(ResourceNotFoundException.class)` y devuelve HTTP 404 Not Found con un `ErrorApi` estructurado para el cliente." }
             ],
             "Códigos HTTP": [
                 { title: "¿Qué son?", desc: "Números de 3 dígitos que el servidor incluye en cada respuesta HTTP para indicar el resultado de la operación. Son el lenguaje estándar entre cliente y servidor para comunicar éxito, errores del cliente o errores del servidor." },
@@ -2030,6 +2030,22 @@ spring.jpa.open-in-view=<span class="kw">false</span></pre></div>
                         </div>
 
                         <div class="nd-code">
+                            <div class="nd-code-label"><i class="fa-brands fa-java"></i> exceptions/ResourceNotFoundException.java — crear la excepción</div>
+                            <pre><span class="kw">package</span> <span class="fd">com.miapp.demo.exceptions</span>;
+
+<span class="kw">public class</span> <span class="cl">ResourceNotFoundException</span> <span class="kw">extends</span> <span class="cl">RuntimeException</span> {
+
+    <span class="kw">public</span> <span class="mt">ResourceNotFoundException</span>(<span class="cl">String</span> message) {
+        <span class="kw">super</span>(message);
+    }
+
+    <span class="kw">public</span> <span class="mt">ResourceNotFoundException</span>(<span class="cl">String</span> resource, <span class="cl">Long</span> id) {
+        <span class="kw">super</span>(resource + <span class="st">" no encontrado con id: "</span> + id);
+    }
+}</pre>
+                        </div>
+
+                        <div class="nd-code">
                             <div class="nd-code-label"><i class="fa-brands fa-java"></i> controllers/common/ControllerExceptionHandler.java</div>
                             <pre><span class="an">@ControllerAdvice</span>
 <span class="kw">public class</span> <span class="cl">ControllerExceptionHandler</span> {
@@ -2534,3 +2550,4 @@ logging.pattern.console=
     </script>
 </body>
 </html>
+
